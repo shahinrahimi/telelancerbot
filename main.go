@@ -5,9 +5,11 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/shahinrahimi/telelancerbot/bot"
+	"github.com/shahinrahimi/telelancerbot/types"
 )
 
 func main() {
@@ -25,12 +27,21 @@ func main() {
 	}
 	b := bot.NewBot(l, token)
 
-	go b.Start(ctx)
+	r := b.GetRouter()
+	r.Use(b.Logger)
+
+	vr := r.NewRoute("View")
+	vr.HandleCommand(types.CommandView, b.MakeHandlerFunc(b.HandleView))
+
+	go func() {
+		if err := b.Start(ctx); err != nil {
+			l.Fatal(err)
+		}
+	}()
 
 	cc := make(chan os.Signal, 1)
 	signal.Notify(cc, os.Interrupt)
 	<-cc
-
-	b.Shutdown()
-
+	time.AfterFunc(300*time.Millisecond, cancel)
+	<-cc
 }
