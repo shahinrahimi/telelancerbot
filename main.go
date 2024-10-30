@@ -36,8 +36,15 @@ func main() {
 
 	r := b.GetRouter()
 	r.Use(b.Logger)
+	r.Use(b.BlockBots)
+	r.Use(b.ProvideNewUser) // force to create a user
+
+	r.HandleCommand(types.CommandStart, b.MakeHandlerFunc(b.HandleStart))
+	r.HandleCommand(types.CommandHelp, b.MakeHandlerFunc(b.HandleHelp))
 
 	ar := r.NewRoute("Auth")
+	ar.HandleCommand(types.CommandRequestsList, b.MakeHandlerFunc(b.HandleView))
+	ar.HandleCommand(types.CommandRequestsList, b.MakeHandlerFunc(b.HandleView))
 	ar.Use(b.RequireAuthentication)
 
 	vr := r.NewRoute("View")

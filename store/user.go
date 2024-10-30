@@ -3,7 +3,6 @@ package store
 import (
 	"database/sql"
 	"fmt"
-	"time"
 
 	"github.com/shahinrahimi/telelancerbot/models"
 )
@@ -19,7 +18,7 @@ func (s *SqliteStore) GetUser(id int64) (*models.User, error) {
 	u := &models.User{ID: id}
 	if err := s.db.QueryRow(models.SELECT_USER, id).Scan(u.ToFelids()...); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("user %d not found in DB", id)
+			return nil, err
 		}
 		return nil, fmt.Errorf("failed to get user %d from DB: %v", id, err)
 	}
@@ -46,7 +45,6 @@ func (s *SqliteStore) GetUsers() ([]*models.User, error) {
 	return us, nil
 }
 func (s *SqliteStore) UpdateUser(u *models.User) error {
-	u.UpdatedAt = time.Now().UTC()
 	if _, err := s.db.Exec(models.UPDATE_USER, u.ToUpdatedArgs()...); err != nil {
 		return fmt.Errorf("failed to update user %d in DB: %v", u.ID, err)
 	}
