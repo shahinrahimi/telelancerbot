@@ -10,8 +10,8 @@ import (
 
 func (b *Bot) RequireAuthentication(next Handler) Handler {
 	return func(u *tgbotapi.Update, ctx context.Context) {
-		user := ctx.Value(models.KeyUser{}).(*models.User)
-		if user == nil {
+		user, ok := ctx.Value(models.KeyUser{}).(models.User)
+		if !ok {
 			b.l.Panicf("user is nil")
 		}
 		if !user.IsConfirmed {
@@ -25,8 +25,8 @@ func (b *Bot) RequireAuthentication(next Handler) Handler {
 
 func (b *Bot) RequireAuthorization(next Handler) Handler {
 	return func(u *tgbotapi.Update, ctx context.Context) {
-		user := ctx.Value(models.KeyUser{}).(*models.User)
-		if user == nil {
+		user, ok := ctx.Value(models.KeyUser{}).(models.User)
+		if !ok {
 			b.l.Panicf("user is nil")
 		}
 		if !user.IsAdmin {

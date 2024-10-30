@@ -5,27 +5,32 @@ import (
 	"log"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/shahinrahimi/telelancerbot/client"
 	"github.com/shahinrahimi/telelancerbot/store"
 	"github.com/shahinrahimi/telelancerbot/types"
 )
 
 type Bot struct {
-	l      *log.Logger
-	api    *tgbotapi.BotAPI
-	router *Router
-	s      store.Storage
+	l       *log.Logger
+	api     *tgbotapi.BotAPI
+	router  *Router
+	s       store.Storage
+	fc      *client.Freelancer
+	MsgChan chan BotMessage
 }
 
-func NewBot(l *log.Logger, token string, s store.Storage) *Bot {
+func New(l *log.Logger, token string, s store.Storage, fc *client.Freelancer) *Bot {
 	api, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		l.Fatalf("Failed to create bot: %v", err)
 	}
 	return &Bot{
-		l:      l,
-		api:    api,
-		router: newRouter(),
-		s:      s,
+		l:       l,
+		api:     api,
+		fc:      fc,
+		router:  newRouter(),
+		s:       s,
+		MsgChan: make(chan BotMessage),
 	}
 }
 
@@ -57,7 +62,16 @@ func (b *Bot) Start(ctx context.Context) error {
 				continue
 			}
 			b.handleUpdate(ctx, update)
+		case msg := <-b.MsgChan:
+			b.sendMessage(msg.ChatID, msg.Msg)
 		}
+	}
+}
+
+func (b *Bot) sendMessage(chatID int64, msgStr string) {
+	msg := tgbotapi.NewMessage(chatID, msgStr)
+	if _, err := b.api.Send(msg); err != nil {
+		b.l.Printf("error in sending message to user: %v", err)
 	}
 }
 
@@ -82,7 +96,7 @@ func (b *Bot) handleUpdate(ctx context.Context, u tgbotapi.Update) {
 			if handler, exists := route.handlers[command]; exists {
 				routeHandler := handler
 				// apply route middlewares in reverse order
-				for i := len(b.router.middlewares) - 1; i >= 0; i-- {
+				for i := len(route.middlewares) - 1; i >= 0; i-- {
 					routeHandler = route.middlewares[i](routeHandler)
 				}
 				routeHandler(u, ctx)

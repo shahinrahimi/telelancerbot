@@ -11,9 +11,12 @@ const (
 	CommandDelete CommandType = "delete" // will delete the user from DB
 
 	// private commands for confirmed users
-	CommandView     CommandType = "view" // view project
-	CommandRegister CommandType = "register"
-	CommandNone     CommandType = "none"
+	CommandView           CommandType = "view" // view project
+	CommandViewCountries  CommandType = "view_countries"
+	CommandViewProjects   CommandType = "view_projects"
+	CommandViewCategories CommandType = "view_categories"
+	CommandRegister       CommandType = "register"
+	CommandNone           CommandType = "none"
 
 	// admin commands
 	CommandConfirm      CommandType = "confirm"

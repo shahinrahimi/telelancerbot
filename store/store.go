@@ -19,7 +19,7 @@ func New(l *log.Logger) *SqliteStore {
 	return &SqliteStore{l: l}
 }
 
-func Init(s *SqliteStore) error {
+func Init(s *SqliteStore, rootID int64) error {
 	if err := os.MkdirAll("db", 0755); err != nil {
 		return fmt.Errorf("failed to create db directory: %v", err)
 	}
@@ -32,5 +32,29 @@ func Init(s *SqliteStore) error {
 	}
 	s.db = db
 	s.l.Println("DB Connected!")
+	// create root user
+	u, err := s.GetUser(rootID)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			s.l.Panicf("unexpected error to get root user: %v", err)
+		}
+		u = &models.User{
+			ID:          rootID,
+			IsAdmin:     true,
+			IsConfirmed: true,
+		}
+		if err := s.InsertUser(u); err != nil {
+			s.l.Panicf("unexpected error to insert root user: %v", err)
+		}
+		s.l.Printf("Root user created: %d", rootID)
+	}
+	if !u.IsAdmin {
+		// update root user
+		u.IsAdmin = true
+		u.IsConfirmed = true
+		if err := s.UpdateUser(u); err != nil {
+			s.l.Panicf("unexpected error to update root user: %v", err)
+		}
+	}
 	return nil
 }
