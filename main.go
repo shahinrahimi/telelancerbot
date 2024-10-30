@@ -37,6 +37,9 @@ func main() {
 	r := b.GetRouter()
 	r.Use(b.Logger)
 
+	ar := r.NewRoute("Auth")
+	ar.Use(b.RequireAuthentication)
+
 	vr := r.NewRoute("View")
 	vr.HandleCommand(types.CommandView, b.MakeHandlerFunc(b.HandleView))
 
