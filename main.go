@@ -10,6 +10,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/shahinrahimi/go-freelancer-sdk/v1"
 	"github.com/shahinrahimi/telelancerbot/bot"
+	"github.com/shahinrahimi/telelancerbot/store"
 	"github.com/shahinrahimi/telelancerbot/types"
 )
 
@@ -22,11 +23,16 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		l.Fatalf("Failed to load .env file: %v", err)
 	}
+	// init store
+	s := store.New(l)
+	if err := store.Init(s); err != nil {
+		l.Fatalf("Failed to init the DB: %v", err)
+	}
 	token := os.Getenv("TELEGRAM_BOT_TOKEN")
 	if token == "" {
 		l.Fatal("TELEGRAM_BOT_TOKEN is not set")
 	}
-	b := bot.NewBot(l, token)
+	b := bot.NewBot(l, token, s)
 
 	r := b.GetRouter()
 	r.Use(b.Logger)

@@ -5,6 +5,7 @@ import (
 	"log"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/shahinrahimi/telelancerbot/store"
 	"github.com/shahinrahimi/telelancerbot/types"
 )
 
@@ -12,9 +13,10 @@ type Bot struct {
 	l      *log.Logger
 	api    *tgbotapi.BotAPI
 	router *Router
+	s      store.Storage
 }
 
-func NewBot(l *log.Logger, token string) *Bot {
+func NewBot(l *log.Logger, token string, s store.Storage) *Bot {
 	api, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		l.Fatalf("Failed to create bot: %v", err)
@@ -23,6 +25,7 @@ func NewBot(l *log.Logger, token string) *Bot {
 		l:      l,
 		api:    api,
 		router: newRouter(),
+		s:      s,
 	}
 }
 
